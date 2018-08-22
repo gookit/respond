@@ -56,11 +56,11 @@ type Options struct {
 	XMLPrefix string
 
 	// template render
-	TplDir      string
 	TplLayout   string
 	TplDelims   view.TplDelims
-	TplSuffixes []string
 	TplFuncMap  template.FuncMap
+	TplViewsDir string
+	TplSuffixes []string
 
 	// supported content types
 	ContentBinary, ContentHTML, ContentXML, ContentText, ContentJSON, ContentJSONP string
@@ -113,10 +113,15 @@ func New(config ...func(*Options)) *Responder {
 	return r
 }
 
+// NewInitialized create new instance and initialization it.
+func NewInitialized(config func(*Options)) *Responder {
+	return New(config).Initialize()
+}
+
 // Initialize the responder
-func (r *Responder) Initialize() {
+func (r *Responder) Initialize() *Responder {
 	if r.initialized {
-		return
+		return r
 	}
 
 	if r.opts.AppendCharset {
@@ -130,11 +135,12 @@ func (r *Responder) Initialize() {
 	v.Delims = opts.TplDelims
 	v.Layout = opts.TplLayout
 	v.FuncMap = opts.TplFuncMap
-	v.ViewsDir = opts.TplDir
+	v.ViewsDir = opts.TplViewsDir
 	v.MustInitialize()
 
 	r.renderer = v
 	r.initialized = true
+	return r
 }
 
 // append charset for all content types

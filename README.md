@@ -1,7 +1,82 @@
 # Respond
 
-respond data(`Text`, `XML`, `JSON`, `JSONP`) to http.ResponseWriter
+respond `Text`, `HTML`, `XML`, `JSON`, `JSONP` data to http.ResponseWriter
 
+## Godoc
+
+- [godoc for gopkg](https://godoc.org/gopkg.in/gookit/respond.v1)
+- [godoc for github](https://godoc.org/github.com/gookit/respond)
+
+## Quick start
+
+```go
+package main
+
+import (
+    "github.com/gookit/respond"
+    "net/http"
+)
+
+func main() {
+    // config and init the default Responder
+    respond.Initialize(func(opts *respond.Options) {
+        opts.TplLayout = "two-column.tpl"
+        opts.TplViewsDir = "templates"
+    })
+    
+    http.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
+        respond.Er.JSON(w, 200, map[string]string{
+            "name": "tom",
+        })
+    })
+    
+    http.HandleFunc("/xml", func(w http.ResponseWriter, r *http.Request) {
+        respond.Er.XML(w, 200, map[string]string{
+            "name": "tom",
+        })
+    })
+    
+    http.HandleFunc("/html", func(w http.ResponseWriter, r *http.Request) {
+        respond.Er.HTML(w, 200, "home.tpl", map[string]string{
+            "name": "tom",
+        })
+    })
+    
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+## Create new
+
+```go
+package main
+
+import (
+    "github.com/gookit/respond"
+    "net/http"
+)
+
+func main() {
+    render := respond.New(func(opts *respond.Options) {
+        opts.TplLayout = "two-column.tpl"
+        opts.TplViewsDir = "templates"
+    })
+    render.Initialize()
+    
+    // usage
+    http.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
+        render.JSON(w, 200, map[string]string{
+            "name": "tom",
+        })
+    })
+    http.HandleFunc("/html", func(w http.ResponseWriter, r *http.Request) {
+        render.HTML(w, 200, "home.tpl", map[string]string{
+            "name": "tom",
+        })
+    })
+    
+}
+```
 
 ## Reference
 
