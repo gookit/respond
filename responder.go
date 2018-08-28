@@ -192,8 +192,8 @@ func (r *Responder) HTMLString(w http.ResponseWriter, status int, tplContent str
 
 	t := template.Must(template.New("").Parse(tplContent))
 	if err := t.Execute(w, v); err != nil {
+		// return err
 		panic(err)
-		return err
 	}
 
 	return nil
@@ -213,7 +213,12 @@ func (r *Responder) HTMLText(w http.ResponseWriter, status int, html string) err
  *************************************************************/
 
 // Auto response data by request accepted header
-func (r *Responder) Auto(w io.Writer, accepted string, data interface{}) error {
+func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data interface{}) error {
+	accepted := req.Header.Get("Accepted")
+	if accepted == "" {
+		return nil
+	}
+
 	return nil
 }
 

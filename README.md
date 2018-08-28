@@ -25,19 +25,19 @@ func main() {
     })
     
     http.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
-        respond.Er.JSON(w, 200, map[string]string{
+        respond.As.JSON(w, 200, map[string]string{
             "name": "tom",
         })
     })
     
     http.HandleFunc("/xml", func(w http.ResponseWriter, r *http.Request) {
-        respond.Er.XML(w, 200, map[string]string{
+        respond.As.XML(w, 200, map[string]string{
             "name": "tom",
         })
     })
     
     http.HandleFunc("/html", func(w http.ResponseWriter, r *http.Request) {
-        respond.Er.HTML(w, 200, "home.tpl", map[string]string{
+        respond.As.HTML(w, 200, "home.tpl", map[string]string{
             "name": "tom",
         })
     })
