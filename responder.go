@@ -1,6 +1,8 @@
 package respond
 
 import (
+	"bytes"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -79,6 +81,16 @@ type Responder struct {
 	// mark init is completed
 	initialized bool
 }
+
+/*************************************************************
+ * JSON driver config
+ *************************************************************/
+
+var (
+	Marshal       = json.Marshal
+	MarshalIndent = json.MarshalIndent
+	NewDecoder    = json.NewDecoder
+)
 
 /*************************************************************
  * create and initialize
@@ -357,4 +369,27 @@ func (r *Responder) Binary(w http.ResponseWriter, status int, in io.Reader, outN
 // Options get options
 func (r *Responder) Options() Options {
 	return *r.opts
+}
+
+// json converts the data as bytes using json encoder
+func jsonMarshal(v interface{}, indent, unEscapeHTML bool) ([]byte, error) {
+	var bs []byte
+	var err error
+	if indent {
+		bs, err = MarshalIndent(v, "", "  ")
+	} else {
+		bs, err = Marshal(v)
+	}
+
+	if err != nil {
+		return bs, err
+	}
+
+	if unEscapeHTML {
+		bs = bytes.Replace(bs, []byte("\\u003c"), []byte("<"), -1)
+		bs = bytes.Replace(bs, []byte("\\u003e"), []byte(">"), -1)
+		bs = bytes.Replace(bs, []byte("\\u0026"), []byte("&"), -1)
+	}
+
+	return bs, nil
 }
