@@ -2,49 +2,15 @@ package respond
 
 import (
 	"bytes"
-	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/gookit/view"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
-)
 
-const (
-	defaultCharset   = "UTF-8"
-	defaultXMLPrefix = `<?xml version="1.0" encoding="ISO-8859-1" ?>\n`
-)
-
-const (
-	// ContentType header key
-	ContentType = "Content-Type"
-
-	// ContentText represents content type text/plain
-	ContentText = "text/plain"
-	// ContentJSON represents content type application/json
-	ContentJSON = "application/json"
-	// ContentJSONP represents content type application/javascript
-	ContentJSONP = "application/javascript"
-	// ContentXML represents content type application/xml
-	ContentXML = "application/xml"
-	// ContentYAML represents content type application/x-yaml
-	// ContentYAML = "application/x-yaml"
-
-	// ContentHTML represents content type text/html
-	ContentHTML = "text/html"
-	// ContentBinary represents content type application/octet-stream
-	ContentBinary = "application/octet-stream"
-
-	// ContentDisposition describes contentDisposition
-	ContentDisposition = "Content-Disposition"
-
-	// describes content disposition type
-	dispositionInline = "inline"
-	// describes content disposition type
-	dispositionAttachment = "attachment"
+	"github.com/gookit/view"
 )
 
 // Options for the Responder
@@ -81,16 +47,6 @@ type Responder struct {
 	// mark init is completed
 	initialized bool
 }
-
-/*************************************************************
- * JSON driver config
- *************************************************************/
-
-var (
-	Marshal       = json.Marshal
-	MarshalIndent = json.MarshalIndent
-	NewDecoder    = json.NewDecoder
-)
 
 /*************************************************************
  * create and initialize
@@ -130,6 +86,15 @@ func NewInitialized(config func(*Options)) *Responder {
 	return New(config).Initialize()
 }
 
+// Initialize the default instance
+func Initialize(config func(opts *Options)) {
+	// config options
+	config(_def.opts)
+
+	// init
+	_def.Initialize()
+}
+
 // Initialize the responder
 func (r *Responder) Initialize() *Responder {
 	if r.initialized {
@@ -165,16 +130,26 @@ func (r *Responder) appendCharset() {
 	r.opts.ContentJSONP += "; " + r.opts.Charset
 }
 
+// LoadTemplateGlob data response
+func LoadTemplateGlob(pattern string) {
+	_def.LoadTemplateGlob(pattern)
+}
+
 // LoadTemplateGlob load templates by glob
-// usage:
+// Usage:
 // 		LoadTemplateGlob("views/*")
 // 		LoadTemplateGlob("views/**/*")
 func (r *Responder) LoadTemplateGlob(pattern string) {
 	r.renderer.LoadByGlob(pattern)
 }
 
+// LoadTemplateFiles data response
+func LoadTemplateFiles(files ...string) {
+	_def.LoadTemplateFiles(files...)
+}
+
 // LoadTemplateFiles load template files.
-// usage:
+// Usage:
 // 		LoadTemplateFiles("path/file1.tpl", "path/file2.tpl")
 func (r *Responder) LoadTemplateFiles(files ...string) {
 	r.renderer.LoadFiles(files...)
@@ -189,12 +164,22 @@ func (r *Responder) Renderer() *view.Renderer {
  * render and response HTML
  *************************************************************/
 
+// HTML data response
+func HTML(w http.ResponseWriter, status int, template string, v interface{}, layout ...string) error {
+	return _def.HTML(w, status, template, v, layout...)
+}
+
 // HTML render HTML template file to http.ResponseWriter
 func (r *Responder) HTML(w http.ResponseWriter, status int, template string, v interface{}, layout ...string) error {
 	w.Header().Set(ContentType, r.opts.ContentHTML)
 	w.WriteHeader(status)
 
 	return r.renderer.Render(w, template, v, layout...)
+}
+
+// HTMLString data response
+func HTMLString(w http.ResponseWriter, status int, tplContent string, v interface{}) error {
+	return _def.HTMLString(w, status, tplContent, v)
 }
 
 // HTMLString render HTML template string to http.ResponseWriter
@@ -211,6 +196,11 @@ func (r *Responder) HTMLString(w http.ResponseWriter, status int, tplContent str
 	return nil
 }
 
+// HTMLText data response
+func HTMLText(w http.ResponseWriter, status int, html string) error {
+	return _def.HTMLText(w, status, html)
+}
+
 // HTMLText response string as html/text
 func (r *Responder) HTMLText(w http.ResponseWriter, status int, html string) error {
 	w.Header().Set(ContentType, r.opts.ContentHTML)
@@ -224,6 +214,11 @@ func (r *Responder) HTMLText(w http.ResponseWriter, status int, html string) err
  * respond data
  *************************************************************/
 
+// Auto data response
+func Auto(w http.ResponseWriter, req *http.Request, v interface{}) error {
+	return _def.Auto(w, req, v)
+}
+
 // Auto response data by request accepted header
 func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data interface{}) error {
 	accepted := req.Header.Get("Accepted")
@@ -231,7 +226,13 @@ func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data interfac
 		return nil
 	}
 
+	// TODO ...
 	return nil
+}
+
+// Empty data response
+func Empty(w http.ResponseWriter) error {
+	return _def.Empty(w)
 }
 
 // Empty alias method of the NoContent()
@@ -239,10 +240,20 @@ func (r *Responder) Empty(w http.ResponseWriter) error {
 	return r.NoContent(w)
 }
 
+// NoContent data response
+func NoContent(w http.ResponseWriter) error {
+	return _def.NoContent(w)
+}
+
 // NoContent serve success but no content response
 func (r *Responder) NoContent(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusNoContent)
 	return nil
+}
+
+// Content data response
+func Content(w http.ResponseWriter, status int, v []byte, contentType string) error {
+	return _def.Content(w, status, v, contentType)
 }
 
 // Content serve success but no content response
@@ -253,6 +264,11 @@ func (r *Responder) Content(w http.ResponseWriter, status int, v []byte, content
 	return err
 }
 
+// Data data response
+func Data(w http.ResponseWriter, status int, v interface{}, contentType string) error {
+	return _def.Data(w, status, v, contentType)
+}
+
 // Data is the generic function called by XML, JSON, Data, HTML, and can be called by custom implementations.
 func (r *Responder) Data(w http.ResponseWriter, status int, v interface{}, contentType string) error {
 	w.WriteHeader(status)
@@ -261,9 +277,19 @@ func (r *Responder) Data(w http.ResponseWriter, status int, v interface{}, conte
 	return err
 }
 
+// String data response
+func String(w http.ResponseWriter, status int, v string) error {
+	return _def.String(w, status, v)
+}
+
 // String alias method of the Text()
 func (r *Responder) String(w http.ResponseWriter, status int, v string) error {
 	return r.Text(w, status, v)
+}
+
+// Text data response
+func Text(w http.ResponseWriter, status int, v string) error {
+	return _def.Text(w, status, v)
 }
 
 // Text serve string content as text/plain response
@@ -273,6 +299,11 @@ func (r *Responder) Text(w http.ResponseWriter, status int, v string) error {
 	_, err := w.Write([]byte(v))
 
 	return err
+}
+
+// JSON data response
+func JSON(w http.ResponseWriter, status int, v interface{}) error {
+	return _def.JSON(w, status, v)
 }
 
 // JSON serve string content as json response
@@ -286,11 +317,19 @@ func (r *Responder) JSON(w http.ResponseWriter, status int, v interface{}) error
 	}
 
 	if r.opts.JSONPrefix != "" {
-		w.Write([]byte(r.opts.JSONPrefix))
+		_, err = w.Write([]byte(r.opts.JSONPrefix))
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = w.Write(bs)
 	return err
+}
+
+// JSONP data response
+func JSONP(w http.ResponseWriter, status int, callback string, v interface{}) error {
+	return _def.JSONP(w, status, callback, v)
 }
 
 // JSONP serve data as JSONP response
@@ -307,11 +346,16 @@ func (r *Responder) JSONP(w http.ResponseWriter, status int, callback string, v 
 		return errors.New("renderer: callback can not bet empty")
 	}
 
-	w.Write([]byte(callback + "("))
+	_,_ = w.Write([]byte(callback + "("))
 	_, err = w.Write(bs)
-	w.Write([]byte(");"))
+	_,_ = w.Write([]byte(");"))
 
 	return err
+}
+
+// XML data response
+func XML(w http.ResponseWriter, status int, v interface{}) error {
+	return _def.XML(w, status, v)
 }
 
 // XML serve data as XML response
@@ -331,15 +375,23 @@ func (r *Responder) XML(w http.ResponseWriter, status int, v interface{}) error 
 	}
 
 	if r.opts.XMLPrefix != "" {
-		w.Write([]byte(r.opts.XMLPrefix))
+		_, err = w.Write([]byte(r.opts.XMLPrefix))
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = w.Write(bs)
 	return err
 }
 
+// Binary data response
+func Binary(w http.ResponseWriter, status int, in io.Reader, outName string, inline bool) error {
+	return _def.Binary(w, status, in, outName, inline)
+}
+
 // Binary serve data as Binary response.
-// usage:
+// Usage:
 // 		var reader io.Reader
 // 		reader, _ = os.Open("./README.md")
 // 		r.Binary(w, http.StatusOK, reader, "readme.md", true)
