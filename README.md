@@ -14,8 +14,8 @@ respond `Text`, `HTML`, `XML`, `JSON`, `JSONP` data to http.ResponseWriter
 package main
 
 import (
-    "github.com/gookit/respond"
     "net/http"
+    "github.com/gookit/respond"
 )
 
 func main() {
@@ -26,19 +26,19 @@ func main() {
     })
     
     http.HandleFunc("/json", func(w http.ResponseWriter, r *http.Request) {
-        respond.As.JSON(w, 200, map[string]string{
+        respond.JSON(w, 200, map[string]string{
             "name": "tom",
         })
     })
     
     http.HandleFunc("/xml", func(w http.ResponseWriter, r *http.Request) {
-        respond.As.XML(w, 200, map[string]string{
+        respond.XML(w, 200, map[string]string{
             "name": "tom",
         })
     })
     
     http.HandleFunc("/html", func(w http.ResponseWriter, r *http.Request) {
-        respond.As.HTML(w, 200, "home.tpl", map[string]string{
+        respond.HTML(w, 200, "home.tpl", map[string]string{
             "name": "tom",
         })
     })
@@ -53,8 +53,8 @@ func main() {
 package main
 
 import (
-    "github.com/gookit/respond"
     "net/http"
+    "github.com/gookit/respond"
 )
 
 func main() {
