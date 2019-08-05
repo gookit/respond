@@ -35,8 +35,8 @@ type Options struct {
 
 	// Charset default content data charset
 	Charset string
-	// AppendCharset on response content
-	AppendCharset bool
+	// AddCharset on response content
+	AddCharset bool
 }
 
 // Responder definition
@@ -63,7 +63,7 @@ func New(config ...func(*Options)) *Responder {
 
 			ContentJSONP:  ContentJSONP,
 			ContentBinary: ContentBinary,
-			AppendCharset: true,
+			AddCharset:    true,
 
 			Charset:   defaultCharset,
 			XMLPrefix: defaultXMLPrefix,
@@ -101,7 +101,7 @@ func (r *Responder) Initialize() *Responder {
 		return r
 	}
 
-	if r.opts.AppendCharset {
+	if r.opts.AddCharset {
 		r.appendCharset()
 	}
 
@@ -221,12 +221,17 @@ func Auto(w http.ResponseWriter, req *http.Request, v interface{}) error {
 
 // Auto response data by request accepted header
 func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data interface{}) error {
+	resContentType := w.Header().Get(ContentType)
+	if resContentType != "" {
+
+	}
+
 	accepted := req.Header.Get("Accepted")
 	if accepted == "" {
 		return nil
 	}
 
-	// TODO ...
+	// default response text
 	return nil
 }
 
