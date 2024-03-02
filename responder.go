@@ -78,7 +78,7 @@ func New(fns ...OptionFn) *Responder {
 
 	// apply config options
 	for _, fn := range fns {
-		fn(std.opts)
+		fn(r.opts)
 	}
 	return r
 }
