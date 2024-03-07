@@ -10,6 +10,8 @@ import (
 
 	"github.com/gookit/easytpl"
 	"github.com/gookit/goutil"
+	"github.com/gookit/goutil/errorx"
+	"github.com/gookit/goutil/netutil/httpctype"
 	"github.com/gookit/goutil/netutil/httpreq"
 )
 
@@ -30,9 +32,11 @@ type Options struct {
 	TplViewsDir string
 	TplSuffixes []string
 
-	// supported content types
+	// supported content types for response, you can change it.
 	ContentBinary, ContentHTML, ContentXML, ContentText, ContentJSON, ContentJSONP string
 
+	// ContentType default content type value. use for Responder.Auto() method
+	ContentType string
 	// Charset default content data charset
 	Charset string
 	// AddCharset on response content
@@ -119,6 +123,10 @@ func (r *Responder) Initialize() *Responder {
 
 // append charset for all content types
 func (r *Responder) appendCharset() {
+	if len(r.opts.Charset) == 0 {
+		return
+	}
+
 	r.opts.ContentBinary += "; " + r.opts.Charset
 	r.opts.ContentHTML += "; " + r.opts.Charset
 	r.opts.ContentXML += "; " + r.opts.Charset
@@ -172,11 +180,10 @@ func (r *Responder) HTMLString(w http.ResponseWriter, status int, tplContent str
 	return nil
 }
 
-// HTMLText response string as html/text
+// HTMLText output raw HTML contents response(content-type=html/text)
 func (r *Responder) HTMLText(w http.ResponseWriter, status int, html string) error {
 	w.Header().Set(ContentType, r.opts.ContentHTML)
 	w.WriteHeader(status)
-
 	_, err := w.Write([]byte(html))
 	return err
 }
@@ -186,19 +193,26 @@ func (r *Responder) HTMLText(w http.ResponseWriter, status int, html string) err
  *************************************************************/
 
 // Auto response data by request accepted header
-func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data any) error {
-	resContentType := w.Header().Get(ContentType)
-	if resContentType != "" {
-		// TODO: check the accepted header
+func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data any, tplName ...string) error {
+	resContentType := w.Header().Get(httpctype.Key)
+	outTypeList := []string{resContentType}
+
+	if resContentType == "" {
+		// check the request accepted header
+		accepted := req.Header.Get("Accepted")
+		if len(accepted) > 0 {
+			outTypeList = httpreq.ParseAccept(accepted)
+		} else {
+			// fallback to default content type
+			if len(r.opts.ContentType) == 0 {
+				return errorx.E("no content type for response")
+			}
+			outTypeList = []string{r.opts.ContentType}
+		}
 	}
 
-	accepted := req.Header.Get("Accepted")
-	if accepted == "" {
-		return nil
-	}
-
-	ls := httpreq.ParseAccept(accepted)
-	for _, val := range ls {
+	var lastVal string
+	for _, val := range outTypeList {
 		if len(val) == 0 {
 			continue
 		}
@@ -209,15 +223,19 @@ func (r *Responder) Auto(w http.ResponseWriter, req *http.Request, data any) err
 		case "application/xml":
 			return r.XML(w, http.StatusOK, data)
 		case "text/html":
-			return r.HTML(w, http.StatusOK, "index", data)
+			if len(tplName) > 0 {
+				return r.HTML(w, http.StatusOK, tplName[0], data)
+			}
+			return errorx.Ef("no template name for HTML response")
 		case "text/plain":
 			return r.Text(w, http.StatusOK, goutil.String(data))
 		}
+
+		lastVal = val
 		break
 	}
 
-	// TODO default response text
-	return nil
+	return errorx.Ef("unsupported content type %q for response", lastVal)
 }
 
 // Empty alias method of the NoContent()

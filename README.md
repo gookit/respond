@@ -1,12 +1,14 @@
 # Respond
 
-respond `Text`, `HTML`, `XML`, `JSON`, `JSONP` data to http.ResponseWriter
+[![GoDoc](https://pkg.go.dev/badge/github.com/gookit/respond.svg)](https://pkg.go.dev/github.com/gookit/respond)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gookit/respond)](https://goreportcard.com/report/github.com/gookit/respond)
+[![Unit-Tests](https://github.com/gookit/respond/workflows/Unit-Tests/badge.svg)](https://github.com/gookit/respond/actions)
+
+Quickly respond `Text`, `HTML`, `XML`, `JSON`, `JSONP` and more data to `http.ResponseWriter`.
 
 ## Godoc
 
-- [doc on gowalker](https://gowalker.org/github.com/gookit/respond)
-- [godoc for gopkg](https://godoc.org/gopkg.in/gookit/respond.v1)
-- [godoc for github](https://godoc.org/github.com/gookit/respond)
+- [godoc](https://pkg.go.dev/github.com/gookit/respond)
 
 ## Quick start
 
@@ -15,6 +17,7 @@ package main
 
 import (
     "net/http"
+	
     "github.com/gookit/respond"
 )
 
@@ -54,6 +57,7 @@ package main
 
 import (
     "net/http"
+	
     "github.com/gookit/respond"
 )
 

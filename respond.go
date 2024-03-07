@@ -111,7 +111,7 @@ func HTMLString(w http.ResponseWriter, status int, tplContent string, v any) err
 	return std.HTMLString(w, status, tplContent, v)
 }
 
-// HTMLText data response
+// HTMLText output raw HTML contents response
 func HTMLText(w http.ResponseWriter, status int, html string) error {
 	return std.HTMLText(w, status, html)
 }
